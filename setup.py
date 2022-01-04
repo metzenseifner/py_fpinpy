@@ -9,7 +9,7 @@ README = (PWD / "README.md").read_text()
 
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='fpinpy',
-      version='1.0.0',
+      version='1.0.1',
       description='Python Functional Library',
       long_description=README,
       long_description_content_type='text/markdown',
@@ -19,6 +19,8 @@ setup(name='fpinpy',
       classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Topic :: Utilities",
+        "Topic :: Software Development :: Libraries",
       ],
       url='https://github.com/metzenseifner/py_fpinpy',
       # keys are package names, whereby empty string means root package and keys define distribution root dir
