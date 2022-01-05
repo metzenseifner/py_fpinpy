@@ -9,8 +9,8 @@ README = (PWD / "README.md").read_text()
 
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='fpinpy',
-      version='1.0.1',
-      description='Python Functional Library',
+      version='1.0.3',
+      description='A functional library for Python.',
       long_description=README,
       long_description_content_type='text/markdown',
       author='Jonathan L. Komar',
@@ -23,12 +23,9 @@ setup(name='fpinpy',
         "Topic :: Software Development :: Libraries",
       ],
       url='https://github.com/metzenseifner/py_fpinpy',
-      # keys are package names, whereby empty string means root package and keys define distribution root dir
       package_dir={'': 'src/main'},
-      packages=find_packages(where='src/main', exclude=()), # list of paths
+      packages=find_packages(where='src/main', exclude=()),
       install_requires=[''],
-      setup_requires=[''],
-      tests_require=[''],
-      #entry_points={},
-      #package_data=[]
+      setup_requires=['wheel'],
+      tests_require=['pytest', 'pyhamcrest'],
      )

@@ -1,29 +1,46 @@
+.ONESHELL:
+.PHONY: check clean build virtual test install publish bdist_wheel bdist sdist
 
+# If `venv/bin/python` exists, it is used. If not, use PATH to find python.
+PWD=$(shell pwd)
+VENV           = $(PWD)/venv
+SYSTEM_PYTHON  = $(or $(shell which python3), $(shell which python))
+PYTHON         = $(VENV)/bin/python
 
-PYTHON=python3
 WHEEL=$(shell find dist -name '*.whl')
 
-build: clean test bdist_wheel
+build: clean check test bdist_wheel
 
-test:
-	cd src/main && python -m pytest ../test/ --verbosity=1
+check: virtual
+	@echo "Verifying package metadata"
+	$(PYTHON) setup.py check -sm
+
+virtual:
+	$(SYSTEM_PYTHON) -m venv $(VENV) 
+	source $(VENV)/bin/activate
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt
+
+test: virtual
+	cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
+
+install: virtual build
+	pip install $(WHEEL)
 
 publish: build
 	twine upload --repository pypi $(WHEEL)
 
-install: build
-	pip install $(WHEEL)
-
 clean:
-	rm -fr dist/ build/
+	$(SYSTEM_PYTHON) setup.py clean --all
+	rm -fr dist/ build/ .out .pytest_cache *.egg-info $(VENV)
 
-bdist_wheel:
+bdist_wheel: virtual 
 	$(PYTHON) setup.py bdist_wheel
 
-sdist:
+sdist: virtual
 	$(PYTHON) setup.py sdist
 
-bdist:
+bdist: virtual
 	$(PYTHON) setup.py bdist \
   --formats=rpm \
   --formats=gztar \
