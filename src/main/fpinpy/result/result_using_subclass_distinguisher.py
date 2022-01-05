@@ -226,6 +226,11 @@ class Result(abc.ABC, Generic[T]):
     
     @abc.abstractmethod
     @non_functional_but_useful
+    def forEach(self, effect: Callable[[T], None]) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    @non_functional_but_useful
     @useful_for_testing
     def forEachOrException(self, effect: Callable[[T], None]):# -> Result[RuntimeError]
         raise NotImplementedError
@@ -297,6 +302,11 @@ class Success(Result[T]):
         return self.successValue()
 
     @overrides(Result)
+    def forEach(self, effect: Callable[[T], None]) -> None:
+        effect(self.successValue())
+        return None
+
+    @overrides(Result)
     def forEachOrException(self, effect: Callable[[T], None]) -> Result[RuntimeError]:
         effect(self.successValue())
         return Result.empty()
@@ -357,6 +367,11 @@ class Empty(Result[T]):
         return default_value() if callable(default_value) else default_value
     
     @overrides(Result)
+    def forEach(self, effect: Callable[[T], None]) -> None:
+        """Do nothing"""
+        return None
+
+    @overrides(Result)
     def forEachOrException(self, effect: Callable[[T], None]) -> Result[Exception]:
         return Result.empty()
 
@@ -414,6 +429,12 @@ class Failure(Empty[T]):
     #@overrides(Result)
     #def getOrElse(self, default_value) -> U:
     #    return default_value() if callable(default_value) else default_value
+
+    # already implemented in Empty
+    #@overrides(Result)
+    #def forEach(self, effect: Callable[[T], None]) -> None:
+    #    """Do nothing"""
+    #    return None
 
     @overrides(Result)
     def forEachOrException(self, effect: Callable[[T], Empty[T]]) -> Result[Exception]:
