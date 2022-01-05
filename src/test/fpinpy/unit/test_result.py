@@ -25,10 +25,61 @@ from hamcrest import *
 
 from fpinpy import Result, Success, Failure, Empty
 
+from hamcrest.core.base_matcher import BaseMatcher
+from hamcrest.core.helpers.hasmethod import hasmethod
+
+class WasEffectApplied(BaseMatcher):
+
+    def __init__(self, was_applied=True):
+        self._was_applied = was_applied
+
+    def _matches(self, item):
+        if item.was_applied:
+            # effect has been applied
+            return True if self._was_applied else False
+        else:
+            # effect has not been applied
+            return False if self._was_applied else True    
+
+    def describe_to(self, description):
+        description.append_text(f'effect application to be <{self._was_applied}>')
+
+def was_applied():
+    return WasEffectApplied(True)
+
+def was_not_applied():
+    return WasEffectApplied(False)
+
+
+class effect_representation():
+    """Functor for effect fixture to 
+        
+        give pytest better help text when 
+        using custom matchers was_applied and
+        was_not_applied.
+    """
+    def __init__(self, functor):
+        self.functor = functor
+        self.__name__ = functor.__name__
+        self.__doc__ = functor.__doc__
+        self.was_applied = False
+
+    def __call__(self, *args, **kwargs):
+        self.was_applied = True
+        return self.functor(*args, **kwargs)
+
+    def __repr__(self):
+        return f"{self.was_applied}"
+
 @pytest.fixture(scope="function")
 def effect():
-    def effect(value):
-        effect.local_storage = value
+    @effect_representation
+    def effect(value) -> None:
+        """Simulate an effect. 
+        
+            Attributes below will only exist
+            if the function has been applied
+        """
     yield effect
 
 def liskov_subtitution(*arg, **kwargs):
@@ -175,22 +226,39 @@ class Test_getOrElse():
             sut = Result.empty().getOrElse(2)
             assert_that(sut, equal_to(2))
 
+class Test_forEach():
+    class Test_Success():
+        def test_forEach(self, effect):
+            Result.success(1).forEach(effect)
+            assert_that(effect, was_applied())
+    class Test_Failure():
+        def test_forEach(self, effect):
+            Result.failure(1).forEach(effect)
+            assert_that(effect, was_not_applied())
+    class Test_Empty():
+        def test_forEach(self, effect):
+            Result.empty().forEach(effect)
+            assert_that(effect, was_not_applied())
+
 class Test_forEachOrException():
 
     class Test_Success():
         def test_forEachOrException(self, effect):
             sut = Result.success(1).forEachOrException(effect)
             assert_that(sut.isEmpty(), equal_to(True))
+            assert_that(effect, was_applied())
 
     class Test_Failure():
         def test_forEachOrException(self, effect):
             sut = Result.failure("oops").forEachOrException(effect)
             assert_that(sut.isSuccess(), equal_to(True))
+            assert_that(effect, was_not_applied())
 
     class Test_Empty():
         def test_forEachOrException(self, effect):
             sut = Result.empty().forEachOrException(effect)
             assert_that(sut.isEmpty(), equal_to(True))
+            assert_that(effect, was_not_applied())
 
 @pytest.mark.usefixtures('effect')
 class Test_forEachOrFail():
@@ -199,20 +267,19 @@ class Test_forEachOrFail():
         def test_forEachOrFail(self, effect):
             sut = Result.of(1).forEachOrFail(lambda x: effect(x))
             assert_that(sut.isEmpty(), equal_to(True))
-            # Test that effect was applied
-            assert_that(effect.local_storage, equal_to(1))
+            assert_that(effect, was_applied())
     
     class Test_Failure():
         def test_forEachOrFail(self, effect):
             sut = Result.failure("oops").forEachOrFail(lambda x: effect(x))
             assert_that(sut.successValue(), equal_to("oops"))
+            assert_that(effect, was_not_applied())
 
     class Test_Empty():
         def test_forEachOrFail(self, effect):
             sut = Result.empty().forEachOrFail(lambda x: effect(x))
             assert_that(sut.isEmpty(), equal_to(True))
-            # Test that effect was not applied
-            assert_that(effect, is_not(has_property('local_storage')))
+            assert_that(effect, was_not_applied())
 
 class Test_mapFailure():
     class Test_Success():
