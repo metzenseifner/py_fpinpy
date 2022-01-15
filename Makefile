@@ -22,7 +22,8 @@ virtual:
 	$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt
 
 test: virtual
-	cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
+	#cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
+	cd src/main && $(PYTHON) -m pytest --verbosity=5 ../test/ 
 
 install: virtual build
 	pip install $(WHEEL)

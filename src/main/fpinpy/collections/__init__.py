@@ -21,3 +21,4 @@
 # SOFTWARE.
 #
 from .map import MapUtilities
+from .singly_linked_list import SinglyLinkedList, Nil, Cons

@@ -1,7 +1,10 @@
 # Description
 
 This library provides a functional programming interface for Python.
-In particular, the Result monad handles the three most common cases in
+
+# Result
+
+The Result monad handles the three most common cases in
 programming:
 
 1. computation succeeded

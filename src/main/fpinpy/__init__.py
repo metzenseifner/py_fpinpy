@@ -22,4 +22,4 @@
 #
 from .result import Result, Success, Failure, Empty
 from .readers import IniConfigReader
-from .collections import MapUtilities
+from .collections import MapUtilities, SinglyLinkedList, Nil, Cons

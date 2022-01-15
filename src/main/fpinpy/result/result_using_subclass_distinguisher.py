@@ -22,31 +22,29 @@
 #
 import abc
 from functools import wraps
+from fpinpy.meta.decorators import overrides
+from fpinpy.meta import caller
 from typing import TypeVar, Generic, Callable, List
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
 U = TypeVar('U')
 
 import inspect
-caller=lambda: inspect.stack()[2].function
-
-def overrides(interface_class):
-    def overrider(method):
-        assert(method.__name__ in dir(interface_class))
-        return method
-    return overrider
 
 def functor_law(orig_f):
+    @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
     return wrapped
 
 def applicative_law(orig_f):
+    @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
     return wrapped
 
 def functional(orig_f):
+    @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
     return wrapped
@@ -54,16 +52,21 @@ def functional(orig_f):
 def non_functional_but_useful(orig_f):
     """Represents effects
     """
+    @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
     return wrapped
 
 def requires_implementation(deps: List[str]):
-    def wrapped(*args, **kwargs):
-        return deps
-    return wrapped
+    def _requires_implementation(orig_f):
+        @wraps(orig_f)
+        def wrapped(*args, **kwargs):
+            return deps
+        return wrapped
+    return _requires_implementation
 
 def useful_for_testing(orig_f):
+    @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
     return wrapped
@@ -200,17 +203,17 @@ class Result(abc.ABC, Generic[T]):
         raise NotImplementedError
     
     @abc.abstractmethod
-    @functor_law
+    #@functor_law
     def map(self, f: Callable[[T], U]):# -> Result[U]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    @applicative_law
+    #@applicative_law
     def flatMap(self, f):# f: Callable[[T], Result[U]] -> Result[U]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    @non_functional_but_useful
+    #@non_functional_but_useful
     def getOrElse(self, default_value) -> U:# default_value: U || Callable[[], U]
         """Supports multiple inputs:
 
@@ -219,35 +222,35 @@ class Result(abc.ABC, Generic[T]):
         """
         raise NotImplementedError
         
-    @functional
-    @requires_implementation([getOrElse, map])
+    #@functional
+    #@requires_implementation([getOrElse, map])
     def orElse(self, default_value: Callable):# default_value: Callable[[], Result[T]] -> Result[U]
         return self.map(lambda x: self).getOrElse(default_value)
     
     @abc.abstractmethod
-    @non_functional_but_useful
+    #@non_functional_but_useful
     def forEach(self, effect: Callable[[T], None]) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    @non_functional_but_useful
-    @useful_for_testing
+    #@non_functional_but_useful
+    #@useful_for_testing
     def forEachOrException(self, effect: Callable[[T], None]):# -> Result[RuntimeError]
         raise NotImplementedError
 
     @abc.abstractmethod
-    @non_functional_but_useful
-    @useful_for_testing
+    #@non_functional_but_useful
+    #@useful_for_testing
     def forEachOrFail(self, effect: Callable[[T], None]):# -> Result[str]
         raise NotImplementedError
 
     @abc.abstractmethod
-    @non_functional_but_useful
+    #@non_functional_but_useful
     def forEachOrThrow(self):# -> Result[Exception]
         raise NotImplementedError
 
     @abc.abstractmethod
-    @functional
+    #@functional
     def mapFailure(self, value: str, exception=RuntimeError):# -> Result[T]
         raise NotImplementedError
     
