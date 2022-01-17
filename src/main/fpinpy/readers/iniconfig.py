@@ -27,16 +27,16 @@ import logging
 logger = logging.getLogger('IniConfigReader')
 
 class IniConfigReader():
-  def __init__(self, configFileName:str):
-    self.config = self.readConfig(configFileName)
+  def __init__(self, configFileName:str, errorMsg:str=""):
+    self.config = self.readConfig(configFileName, errorMsg)
 
-  def readConfig(self, configFileName:str) -> Result:
+  def readConfig(self, configFileName:str, errorMsg:str) -> Result:
     try:
       parser = configparser.ConfigParser()
       parser.read(configFileName)
-      return Result.of(parser)
+      return Result.of(parser, errorMsg=errorMsg)
     except Exception as e:
-      return Result.failure(e)
+      return Result.failure(RuntimeError(f"{repr(e)}. {errorMsg}"))
 
   def getProperty(self, section:str, key:str) -> Result:
     try:
