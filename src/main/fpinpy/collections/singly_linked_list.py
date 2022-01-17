@@ -143,15 +143,23 @@ class Cons(SinglyLinkedList[T]):
 
     @overrides(SinglyLinkedList)
     def foldLeft(self, identity: U, function: Callable[[U, T], U]) -> U:
-        """ TODO implement non-stack state for the accumulator
-            Warning: This will blow that stack at around list lengths of 980
+        """ Implemented imperatively as technique to too many stack calls.
         """
-        def _foldLeft(acc: U, lst: SinglyLinkedList[T]):
-            if lst.isEmpty():
-                return acc
-            else:
-                return _foldLeft(function(acc, lst.head()), lst.tail())
-        return _foldLeft(identity, self)
+        accumulator = identity
+        tmpHead = self.head()
+        tmpList = self.tail()
+        while not tmpList.isEmpty():
+            accumulator = function(accumulator, tmpHead)
+            tmpHead = tmpList.head()
+            tmpList = tmpList.tail()
+        accumulator = function(accumulator, tmpHead)
+        return accumulator
+        #def _foldLeft(acc: U, lst: SinglyLinkedList[T]):
+        #    if lst.isEmpty():
+        #        return acc
+        #    else:
+        #        return _foldLeft(function(acc, lst.head()), lst.tail())
+        #return _foldLeft(identity, self)
 
     @overrides(SinglyLinkedList)
     def __str__(self) -> str:
