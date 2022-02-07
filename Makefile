@@ -16,10 +16,12 @@ check: virtual
 	$(PYTHON) setup.py check -sm
 
 virtual:
-	$(SYSTEM_PYTHON) -m venv --system-site-packages $(VENV) 
-	source $(VENV)/bin/activate
-	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt
+	@if [ ! -d $(VENV) ]; then \
+		$(SYSTEM_PYTHON) -m venv --system-site-packages $(VENV) 
+		source $(VENV)/bin/activate
+		$(PYTHON) -m pip install --upgrade pip
+		$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt
+	fi
 
 test: virtual
 	#cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
