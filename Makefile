@@ -17,10 +17,10 @@ check: virtual
 
 virtual:
 	@if [ ! -d $(VENV) ]; then \
-		$(SYSTEM_PYTHON) -m venv --system-site-packages $(VENV) 
-		source $(VENV)/bin/activate
-		$(PYTHON) -m pip install --upgrade pip
-		$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt
+		$(SYSTEM_PYTHON) -m venv --system-site-packages $(VENV); \
+		source $(VENV)/bin/activate; \
+		$(PYTHON) -m pip install --upgrade pip; \
+		$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt; \
 	fi
 
 test: virtual
