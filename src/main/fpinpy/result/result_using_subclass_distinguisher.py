@@ -23,13 +23,11 @@
 import abc
 from functools import wraps
 from fpinpy.meta.decorators import overrides
-from fpinpy.meta import caller
 from typing import TypeVar, Generic, Callable, List
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
 U = TypeVar('U')
 
-import inspect
 
 def functor_law(orig_f):
     @wraps(orig_f)
@@ -115,8 +113,9 @@ class Result(abc.ABC, Generic[T]):
         2. Preserves composition: map(f . g) ≡ map(f) . map(g)
        
     """
-    @staticmethod
-    def of(value: T, errorMsg: str=None, predicate: Callable[[T], bool]=None):
+
+    @classmethod
+    def of(cls, value: T, errorMsg: str=None, predicate: Callable[[T], bool]=None):
         """Main initializer for this class.
 
             Lifts value into monad.
@@ -136,8 +135,8 @@ class Result(abc.ABC, Generic[T]):
             return Result.success(value) if value != None \
                 else Result.failure(errorMsg)
 
-    @staticmethod
-    def success(value: T):
+    @classmethod
+    def success(cls, value: T):
         """Initializer for a Result.Success class.
         """
         return Success(value)
@@ -174,13 +173,15 @@ class Result(abc.ABC, Generic[T]):
         return Empty()
 
     def __new__(cls, *args, **kwargs):
-        if str(caller()) != "of":
-            raise RuntimeError(f'Base class may not be used directly. Prefer Result.of() for instantiatiation. You used {caller()}')
+        #if str(caller()) != "of":
+        #    raise RuntimeError(f'Base class may not be used directly. Prefer Result.of() for instantiatiation. You used {caller()}')
+        #assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
+        #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         instance = object.__new__(cls, args, kwargs)
         return instance
 
-    def __init__(self, value: T):
-        self._value = value
+    def __init__(self):
+        super().__init__()
 
     @abc.abstractmethod
     def successValue(self) -> RuntimeError:
@@ -259,12 +260,15 @@ class Success(Result[T]):
     """Represents a Result that is successful.
     """
     def __new__(cls, *args, **kwargs):
-        if caller() != "success":
-            raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #if caller() != "success":
+        #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
+        #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
 
     def __init__(self, value: T):
         self._value = value
+        super().__init__()
 
     @overrides(Result)
     def successValue(self):
@@ -331,11 +335,13 @@ class Empty(Result[T]):
     """Represents a Result that is legitimately empty.
     """
     def __new__(cls, *args, **kwargs):
-        if caller() != "empty":
-            raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #if caller() != "empty":
+        #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
+        #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
     def __init__(self):
-        pass
+        super().__init__() 
 
     @overrides(Result)
     def successValue(self):
@@ -394,11 +400,14 @@ class Failure(Empty[T]):
     """Represents a Result that is a failure.
     """
     def __new__(cls, *args, **kwargs):
-        if caller() != "failure":
-            raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #if caller() != "failure":
+        #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
+        #assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
+        #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
     def __init__(self, exception: Exception):
         self._exception = exception
+        super().__init__()
     
     @overrides(Result)
     def successValue(self) -> RuntimeError:
