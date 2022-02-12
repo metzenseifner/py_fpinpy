@@ -115,7 +115,7 @@ class Result(abc.ABC, Generic[T]):
     """
 
     @classmethod
-    def of(cls, value: T, errorMsg: str=None, predicate: Callable[[T], bool]=None):
+    def of(cls, value: T, errorMsg: str=None, predicate: Callable[[T], bool]=lambda x: True):
         """Main initializer for this class.
 
             Lifts value into monad.
@@ -123,17 +123,14 @@ class Result(abc.ABC, Generic[T]):
             A.k.a. unit
         """
         errorMsg = errorMsg if errorMsg != None else "None value"
-        if predicate != None:
-            try:
-                if predicate(value):
-                    return Result.success(value)
-                else:
-                    return Result.failure(f"{errorMsg}")
-            except Exception as e:
-                return Result.failure(f"Exception while evaluating predicate: {errorMsg}", exception=e)
-        else:
-            return Result.success(value) if value != None \
-                else Result.failure(errorMsg)
+        try:
+            if predicate(value):
+                return Result.success(value) if value != None \
+                    else Result.failure(errorMsg)
+            else:
+                return Result.failure(f"{errorMsg}")
+        except Exception as e:
+            return Result.failure(f"Exception while evaluating predicate: {errorMsg}", exception=e)
 
     @classmethod
     def success(cls, value: T):
@@ -156,8 +153,7 @@ class Result(abc.ABC, Generic[T]):
             > Except where mentioned, they have an “associated value” indicating the detailed cause of the error. This may be a string or a tuple of several items of information (e.g., an error code and a string explaining the code). The associated value is usually passed as arguments to the exception class’s constructor.
         """
         if isinstance(exception, Exception):
-            assert isinstance(value, str)
-            return Failure(exception(value))
+            return Failure(exception)
         if isinstance(value, Failure):# Failure[T] but isinstance does not support subtypes
             return Failure(value._exception)
         if isinstance(value, str):
@@ -364,7 +360,7 @@ class Empty(Result[T]):
         return False
 
     @overrides(Result)
-    def map(self, f: Callable[[T], U]) -> Result[U]:
+    def map(self, f: Callable[[T], U]):# -> Result[U]: # TODO force Nil to be subclass of Result
         return self
 
     @overrides(Result)
@@ -414,7 +410,7 @@ class Failure(Empty[T]):
         return RuntimeError(f"Method successValue() called on {self.__class__} instance.")
     
     @overrides(Result)
-    def failureValue(self) -> RuntimeError:
+    def failureValue(self) -> Exception:
         return self._exception
 
     @overrides(Result)
@@ -430,7 +426,7 @@ class Failure(Empty[T]):
         return True
 
     @overrides(Result)
-    def map(self, f: Callable[[T], U]) -> Result[U]:
+    def map(self, f: Callable[[T], U]):# -> Result[U]: TODO: force make Failure subclass of Result
         return self
 
     @overrides(Result)

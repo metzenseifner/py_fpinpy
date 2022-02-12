@@ -23,9 +23,12 @@ virtual:
 		$(PYTHON) -m pip install -r build_requirements.txt -r test_requirements.txt; \
 	fi
 
-test: virtual
+test: virtual typecheck
 	#cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
 	cd src/main && $(PYTHON) -m pytest --verbosity=5 ../test/ 
+
+typecheck:
+	cd src/main && $(PYTHON) -m mypy fpinpy
 
 install: virtual build
 	pip install $(WHEEL)

@@ -22,7 +22,7 @@
 #
 import abc
 from fpinpy.meta.decorators import overrides
-from typing import Iterator, TypeVar, Generic, Callable
+from typing import Iterator, TypeVar, Generic, Callable, Dict
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
 U = TypeVar('U')
@@ -135,10 +135,9 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         raise NotImplementedError
 
     @abc.abstractmethod
-    def length() -> int:
+    def length(self) -> int:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def reverse(self):
         return SinglyLinkedList.list(*reversed(self))
 
@@ -150,7 +149,7 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
     #def foldRight(self, identity: U, function: Callable[[U], Callable[[T], U]]):
     #    return self.reverse().foldLeft(identity, lambda x: lambda y: function(y)(x))
 
-    def map(self, function: Callable[T, U]):# -> SinglyLinkedList[U]:
+    def map(self, function: Callable[[T], U]):# -> SinglyLinkedList[U]:
         """ Map a function T -> U to each element in a list.
 
             Map can be defined here in the superclass for both subclasses,
@@ -179,7 +178,7 @@ class Nil(SinglyLinkedList[T]):
     def __init__(self):
         pass
 
-    _instances = {}
+    _instances: Dict[object, object] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:

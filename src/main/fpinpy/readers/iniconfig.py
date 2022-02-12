@@ -46,6 +46,7 @@ class IniConfigReader():
 
   def readSection(self, section:str) -> Result: # Result<configparser>
     r = self.config.map(lambda parser: parser.get(section))
+    return r
 
   def __str__(self):
     return "{}({})".format(__name__, self.config)
