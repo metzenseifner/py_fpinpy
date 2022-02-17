@@ -22,10 +22,33 @@
 #
 import abc
 from fpinpy.meta.decorators import overrides
+from fpinpy.result import Result
 from typing import Iterator, TypeVar, Generic, Callable, Dict
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
 U = TypeVar('U')
+
+# TODO Make this meta class work with parameter T
+class SinglyLinkedListMeta(type):
+    """
+
+        Meta classes propogate to all subclasses.
+        This is here to affect subclasses only.
+
+        Generic Types: https://www.python.org/dev/peps/pep-0560/
+    """
+    def __new__(cls, clsname, bases, clsdict):
+        return super().__new__(cls, clsname, bases, clsdict)
+    def __getitem__(self, index):
+        return index
+    def __class_getitem__(cls, item):
+        return f"{cls.__name__}[{item.__name__}]"
+
+class AbstractSinglyLinkedList(metaclass=SinglyLinkedListMeta):
+    def __getitem__(self, index):
+        return index
+    def __class_getitem__(cls, item):
+        return f"{cls.__name__}[{item.__name__}]"
 
 class SinglyLinkedListIterator:
     """Forward and backward iterator
@@ -114,6 +137,57 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
     def __reversed__(self):
         return SinglyLinkedListIterator(self, reverse=True)
 
+    @staticmethod
+    def flattenResult(aList):# : SinglyLinkedList[Result[T]]):
+        """ Takes a list of Result and returns a list of their raw values.
+
+            Failure or Empty will be converted into an empty list.
+        """
+        tmp = []
+        for elem in aList:
+            tmp.append(elem.getOrElse(SinglyLinkedList.list()))
+        return SinglyLinkedList.list(*tmp)
+
+    @staticmethod
+    def traverse(aList, function, ignoreFailure=False, emptyIsFailure=True, successOfFailure=False): # SinglyLinkedList[T], Callable[[T], Result[U]] -> Result[List[U]]:
+        """ Applies function and collects Result.Success raw values.
+
+            Input:
+            aList: SinglyLinkedList[T]; a list to process
+            function: T -> Result[U]; a function
+            ignoreFailure: Bool; any occurrance of Failure is not included in output
+            emptyIsFailure: Bool; any occurance of Empty is considered a Failure 
+
+            Output:
+            Result[List[U]]
+        """
+        arr = []
+        failure_recognized = False
+        for elem in aList:
+            tmp = function(elem)
+            if tmp.isSuccess():
+                arr.append(tmp.getOrElse("Could not extract Success"))
+            if tmp.isEmpty():
+                if emptyIsFailure:
+                    # reassign Empty as Failure
+                    tmp = Result.failure(RuntimeError("Empty was considered Failure."))
+            if tmp.isFailure():
+                if ignoreFailure:
+                    continue
+                failure_recognized = True
+                if successOfFailure:
+                    arr.append(tmp.forEachOrFail(lambda x: x).getOrElse("Failure"))
+        return Result.failure(RuntimeError(SinglyLinkedList.list(*arr))) if failure_recognized \
+            else Result.success(SinglyLinkedList.list(*arr))
+
+    @staticmethod
+    def sequence(aList, ignoreFailure=False, emptyIsFailure=True, successOfFailure=False): # List[Result[T]]) -> Result[List[T]]:
+        """ Converts List[Result[T]]) into Result[List[T]]
+
+            The default configuration: Any occurrance of Failure or Empty will yield Failure[List[T]]
+        """
+        return SinglyLinkedList.traverse(aList, lambda x: x)
+
     @abc.abstractmethod
     def head(self):
         raise NotImplementedError
@@ -179,12 +253,16 @@ class Nil(SinglyLinkedList[T]):
         pass
 
     _instances: Dict[object, object] = {}
+    import threading
+    lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            with lock:
+            with cls.lock:
+                # another thread could have created the lock
+                # between the check and acquiring lock, so check again.
                 if cls not in cls._instances:
-                    cls._instances[cls] = super().__call__(*args, **kwargs)
+                    cls._instances[cls] = super().__new__(Nil, *args, **kwargs)
         return cls._instances[cls]
 
     @overrides(SinglyLinkedList)
@@ -224,7 +302,10 @@ class Nil(SinglyLinkedList[T]):
         return "Nil"
 
     def __eq__(self, o):
-        return instanceof(Nil, o)
+        return isinstance(o, Nil)
+
+    def __hash__(self):
+        return hash(repr(self))
 
 class Cons(SinglyLinkedList[T]):
     """Represents non-empty list.
@@ -314,8 +395,9 @@ class Cons(SinglyLinkedList[T]):
         accumulator = ""
         def toString(accumulator: str, aList: SinglyLinkedList) -> str:
             if aList.isEmpty():
-                return accumulator + ", " + repr(aList) + ")"
+                # Cons(accumulator, Nil)
+                return accumulator + repr(aList) + ")"
             else:
-                accumulator = accumulator + f"Cons(" + repr(aList.head())
+                accumulator = accumulator + "Cons(" + repr(aList.head()) + ", "
                 return toString(accumulator, aList.tail())
         return f"{toString(accumulator, self)}"

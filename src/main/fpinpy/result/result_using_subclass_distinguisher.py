@@ -250,6 +250,9 @@ class Result(abc.ABC, Generic[T]):
     #@functional
     def mapFailure(self, value: str, exception=RuntimeError):# -> Result[T]
         raise NotImplementedError
+
+    def __repr__(self):
+        return f"Result({self._value})"
     
 
 class Success(Result[T]):
@@ -392,6 +395,10 @@ class Empty(Result[T]):
     def mapFailure(self, value: str, exception=RuntimeError) -> Result[T]:
         return self
 
+    @overrides(Result)
+    def __repr__(self):
+        return f"Empty()"
+
 class Failure(Empty[T]):
     """Represents a Result that is a failure.
     """
@@ -459,3 +466,7 @@ class Failure(Empty[T]):
     @overrides(Result)
     def mapFailure(self, value: str, exception=RuntimeError) -> Result[T]:
         return Result.failure(value, exception=exception)
+
+    @overrides(Result)
+    def __repr__(self):
+        return f"Failure({repr(self._exception)})"

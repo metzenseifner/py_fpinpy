@@ -24,6 +24,7 @@ import pytest
 from hamcrest import *
 
 from fpinpy import SinglyLinkedList, Nil, Cons
+from fpinpy.result import Result, Failure, Success
 
 class Test_Initialization:
     class Test_Cons:
@@ -201,3 +202,47 @@ class Test_SinglyLinkedListIterator:
             assert_that(next(sut), equal_to(2))
             assert_that(next(sut), equal_to(1))
             assert_that(calling(next).with_args(sut), raises(StopIteration))
+
+class Test_traverse:
+    # TODO Expand tests to include all cases. sequence was considered more important.
+    class Test_static:
+        def test_traverse_some(self):
+            sut = SinglyLinkedList.traverse(SinglyLinkedList.list(1, 2, 3), lambda x: Result.of(x + 1))
+            assert_that(str(sut), equal_to("Result([2, 3, 4, NIL])"))
+        def test_traverse_singleton(self):
+            sut = SinglyLinkedList.traverse(SinglyLinkedList.list(2), lambda x: Result.of(x + 1))
+            assert_that(str(sut), equal_to("Result([3, NIL])"))
+        def test_traverse_empty(self):
+            sut = SinglyLinkedList.traverse(SinglyLinkedList.list(), lambda x: Result.of(x + 1))
+            assert_that(str(sut), equal_to("Result([NIL])"))
+
+class Test_sequence:
+    class Test_static:
+        def test_sequence_some_when_contains_failure(self):
+            sut = SinglyLinkedList.sequence(
+                SinglyLinkedList.list(Result.of(1), 
+                Result.failure(RuntimeError(2)), 
+                Result.of(3)))
+            assert_that(sut, instance_of(Failure))
+        def test_sequence_some_when_contains_empty(self):
+            sut = SinglyLinkedList.sequence(
+                SinglyLinkedList.list(Result.of(1), 
+                Result.empty(), 
+                Result.of(3)))
+            assert_that(sut, instance_of(Failure))
+        def test_sequence_singleton(self):
+            sut = SinglyLinkedList.sequence(SinglyLinkedList.list(Result.of(1)))
+            assert_that(str(sut), equal_to("Result([1, NIL])"))
+        def test_sequence_empty(self):
+            sut = SinglyLinkedList.sequence(SinglyLinkedList.list())
+            assert_that(str(sut), equal_to("Result([NIL])"))
+
+class Test_flattenResult:
+    class Test_Cons:
+        def test_flattenResult_some(self):
+            sut = SinglyLinkedList.flattenResult(SinglyLinkedList.list(Result.of(1), Result.empty(), Result.failure(2), Result.of(3)))
+            assert_that(str(sut), equal_to("[1, [NIL], [NIL], 3, NIL]"))
+    class Test_Nil:
+        def test_flattenResult(self):
+            sut = SinglyLinkedList.flattenResult(SinglyLinkedList.list())
+            assert_that(str(sut), equal_to("[NIL]"))
