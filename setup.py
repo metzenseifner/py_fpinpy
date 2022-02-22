@@ -9,7 +9,7 @@ README = (PWD / "README.md").read_text()
 
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='fpinpy',
-      version='1.0.10',
+      version='1.1.1',
       description='A functional library for Python.',
       long_description=README,
       long_description_content_type='text/markdown',
