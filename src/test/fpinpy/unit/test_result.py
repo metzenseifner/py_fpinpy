@@ -197,7 +197,7 @@ class TestApplicativeFunctor():
     class Test_Failure():
         def test_Failure_when_flatMap_always_yields_failure(self):
             func_from_a_to_Result_a = lambda a: Result.of(a/0)
-            sut = Result.of(1).flatMap(func_from_a_to_Result_a)
+            sut = Result.failure(1).flatMap(func_from_a_to_Result_a)
             assert_that(sut.isFailure(), equal_to(True))
 
     class Test_Empty():

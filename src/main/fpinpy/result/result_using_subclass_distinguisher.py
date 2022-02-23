@@ -437,8 +437,8 @@ class Failure(Empty[T]):
         return self
 
     @overrides(Result)
-    def flatMap(self, f: Callable[[T], Result[U]]) -> Result[U]:
-        return Result.empty()
+    def flatMap(self, f: Callable[[T], Result[U]]):# -> Result[U]:
+        return self
 
     # already implemented in Empty
     #@overrides(Result)
