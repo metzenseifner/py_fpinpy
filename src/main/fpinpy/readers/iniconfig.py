@@ -46,7 +46,7 @@ class IniConfigReader():
     if isinstance(config, str):
        self.config = self._readConfigString(config, errorMsg)
     elif isinstance(config, Path):
-       self.config = self._readConfigPath(config, errorMsg)
+       self.config = self._readConfigFile(config, errorMsg)
     elif isinstance(config, Dict):
        self.config = self._readConfigDict(config, errorMsg)
     else:
