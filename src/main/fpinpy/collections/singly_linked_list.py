@@ -149,6 +149,25 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         return SinglyLinkedList.list(*tmp)
 
     @staticmethod
+    def foldRightStatic(aList, identity, function):
+        #if aList.isEmpty():
+        #    return identity
+        #else:
+        #    return function(aList.head())(SinglyLinkedList.foldRight(aList.tail(), identity, function))
+        accumulator = identity
+        tmp_list = aList.reverse()
+        while not tmp_list.isEmpty():
+            next_elem = tmp_list.head()
+            accumulator = function(next_elem)(accumulator)
+            tmp_list = tmp_list.tail()
+        return accumulator
+
+    @staticmethod
+    def concat(list1, list2): # -> SinglyLinkedList
+        """ Requires  static foldRight or foldLeft """
+        return SinglyLinkedList.foldRightStatic(list1, list2, lambda x: lambda y: SinglyLinkedList.cons(x, y))
+
+    @staticmethod
     def traverse(aList, function, ignoreFailure=False, emptyIsFailure=True, successOfFailure=False): # SinglyLinkedList[T], Callable[[T], Result[U]] -> Result[List[U]]:
         """ Applies function and collects Result.Success raw values.
 
@@ -219,8 +238,9 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
     def foldLeft(self, identity: U, function: Callable[[U], Callable[[T], U]]):
         raise NotImplementedError
 
-    #@abc.abstractmethod
-    #def foldRight(self, identity: U, function: Callable[[U], Callable[[T], U]]):
+    @abc.abstractmethod
+    def foldRight(self, identity: U, function: Callable[[U], Callable[[T], U]]):
+        raise NotImplementedError
     #    return self.reverse().foldLeft(identity, lambda x: lambda y: function(y)(x))
 
     def map(self, function: Callable[[T], U]):# -> SinglyLinkedList[U]:
@@ -240,6 +260,13 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         """Remove n elements from the front of the list.
         """
         raise NotImplementedError
+
+    def filter(self, predicate: Callable[[T], bool]):
+        """ Removes elements from the lst that do not satisfy a given predicate.
+        """
+        return self.foldRight(SinglyLinkedList.list(), \
+            lambda h: lambda t: SinglyLinkedList.cons(h, t) if predicate(h) else t
+        )
 
     @abc.abstractmethod
     def __str__(self):
@@ -291,8 +318,16 @@ class Nil(SinglyLinkedList[T]):
         return identity
 
     @overrides(SinglyLinkedList)
+    def foldRight(self, identity: U, function: Callable[[U, T], U]):
+        return identity
+
+    @overrides(SinglyLinkedList)
     def drop(self, n: int) -> SinglyLinkedList[T]:
         return self
+
+    #@overrides(SinglyLinkedList)
+    #def filter(self, predicate: Callable[[T], bool]):
+    #    return self
 
     @overrides(SinglyLinkedList)
     def __str__(self):
@@ -356,6 +391,11 @@ class Cons(SinglyLinkedList[T]):
                 return output
             return _drop_iterative(n)
 
+    #@overrides(SinglyLinkedList)
+    #def filter(self, predicate: Callable[[T], bool]):
+    #    return self.foldLeft(SinglyLinkedList.list(), lambda h: lambda t: \
+    #        SinglyLinkedList.list(h, t) if predicate(h) else t)
+
     @overrides(SinglyLinkedList)
     def foldLeft(self, identity: U, function: Callable[[U], Callable[[T], U]]) -> U:
         """ Implemented imperatively as technique to avoid too many stack calls.
@@ -378,6 +418,16 @@ class Cons(SinglyLinkedList[T]):
         accumulator = identity # (empty/Nil)
         for elem in self:
            accumulator = function(accumulator)(elem)
+        return accumulator
+
+    @overrides(SinglyLinkedList)
+    def foldRight(self, identity: U, function: Callable[[T], Callable[[U], U]]) -> U:
+        accumulator = identity
+        tmp_list = self.reverse()
+        while not tmp_list.isEmpty():
+            next_elem = tmp_list.head()
+            accumulator = function(next_elem)(accumulator)
+            tmp_list = tmp_list.tail()
         return accumulator
 
     @overrides(SinglyLinkedList)

@@ -123,7 +123,35 @@ class Test_foldLeft():
             sut = SinglyLinkedList.list(1).foldLeft(0, lambda x: lambda y: x + y)
             assert_that(sut, equal_to(1))
     class Test_Nil:
-        def test_foldLeft(self):
+        def test_foldLeft_keeps_identity(self):
+            sut = SinglyLinkedList.list().foldLeft(0, lambda x: lambda y: x + y)
+            assert_that(str(sut), equal_to("0"))
+        def test_foldLeft_keeps_identity(self):
+            sut = SinglyLinkedList.list().foldLeft(0, lambda x: lambda y: x > y)
+            assert_that(str(sut), equal_to("0"))
+
+class Test_foldRight():
+    class Test_Cons:
+        def test_foldRight_commutative_operation_foldLeft_Equivalence_some(self):
+            aux = SinglyLinkedList.list(2, 3, 4).foldLeft(0, lambda x: lambda y: x + y)
+            sut = SinglyLinkedList.list(2, 3, 4).foldRight(0, lambda x: lambda y: x + y)
+            assert_that(sut, equal_to(aux))
+            assert_that(sut, equal_to(9))
+        def test_foldRight_noncommutative_operation_foldLeft_Equivalence_some(self):
+            op = SinglyLinkedList.cons
+            # swap operands to: o(y,x) because foldLeft does <accumulator> <op> <leftmost operand> <op> <next operand> ...
+            # The initial value of <accumulator is Nil, which we immediately want as tail <x> in cons(y, x).
+            # The cons call looks like cons(y, [2, NIL]), yielding [3, 4, NIL]. And so forth...
+            aux = SinglyLinkedList.list(2, 3, 4).foldLeft(SinglyLinkedList.list(), lambda x: lambda y: op(y, x))
+            sut = SinglyLinkedList.list(2, 3, 4).foldRight(SinglyLinkedList.list(), lambda x: lambda y: op(x, y))
+            assert_that(str(aux), equal_to("[4, 3, 2, NIL]"))
+            assert_that(str(sut), equal_to("[2, 3, 4, NIL]"))
+            assert_that(str(sut), equal_to(str(aux.reverse())))
+        def test_foldRight_singleton(self):
+            sut = SinglyLinkedList.list(2).foldLeft(0, lambda x: lambda y: x + y)
+            assert_that(str(sut), equal_to("2"))
+    class Test_Nil:
+        def test_foldRight_keeps_identity(self):
             sut = SinglyLinkedList.list().foldLeft(0, lambda x: lambda y: x + y)
             assert_that(str(sut), equal_to("0"))
 
@@ -148,6 +176,17 @@ class Test_drop():
         def test_drop_two(self):
             sut = SinglyLinkedList.list().drop(2)
             assert_that(str(sut), equal_to('[NIL]'))
+
+class Test_filter():
+    class Test_Cons:
+        def test_filter_some(self):
+            sut = SinglyLinkedList.list(1,2,3,4).filter(lambda h: h > 2)
+            assert_that(str(sut), equal_to('[3, 4, NIL]'))
+        def test_filter_singleton(self):
+            pass
+    class Test_Nil:
+        def test_filter(self):
+            pass
 
 class Test_map():
     class Test_Cons:
