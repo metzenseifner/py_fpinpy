@@ -24,6 +24,7 @@ import abc
 from functools import wraps
 from fpinpy.meta.decorators import overrides
 from typing import TypeVar, Generic, Callable, List
+import sys
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
 U = TypeVar('U')
@@ -410,6 +411,10 @@ class Failure(Empty[T]):
         return object.__new__(cls)
     def __init__(self, exception: Exception):
         self._exception = exception
+        tmp = sys.exc_info()
+        self.exception_type = tmp[0]
+        self.exception_object = tmp[1]
+        self.exception_traceback = tmp[2]
         super().__init__()
     
     @overrides(Result)
@@ -457,7 +462,7 @@ class Failure(Empty[T]):
 
     @overrides(Result)
     def forEachOrFail(self, effect: Callable[[T], None]) -> Result[str]:
-        return Result.success(str(self._exception))
+        return Result.success(repr(self._exception))
 
     @overrides(Result)
     def forEachOrThrow(self, effect: Callable[[T], None]) -> None:

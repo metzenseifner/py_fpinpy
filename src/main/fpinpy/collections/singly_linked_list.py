@@ -268,6 +268,13 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
             lambda h: lambda t: SinglyLinkedList.cons(h, t) if predicate(h) else t
         )
 
+    def forEach(self, effect: Callable[[T], None]):
+        worklist = self
+        while not worklist.isEmpty():
+            effect(worklist.head())
+            worklist = worklist.tail()
+        return None
+
     @abc.abstractmethod
     def __str__(self):
         raise NotImplementedError

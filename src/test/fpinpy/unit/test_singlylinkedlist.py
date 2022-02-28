@@ -182,11 +182,36 @@ class Test_filter():
         def test_filter_some(self):
             sut = SinglyLinkedList.list(1,2,3,4).filter(lambda h: h > 2)
             assert_that(str(sut), equal_to('[3, 4, NIL]'))
-        def test_filter_singleton(self):
+        def test_filter_singleton(self): # TODO
             pass
     class Test_Nil:
-        def test_filter(self):
+        def test_filter(self): # TODO
             pass
+
+class Test_forEach():
+    class Test_Cons:
+        def test_forEach_some(self):
+            sut = None
+            def effect(x):
+                nonlocal sut
+                sut = x
+            SinglyLinkedList.list(1,2,3,4).forEach(effect)
+            assert_that(sut, equal_to(4))
+        def test_forEach_singleton(self):
+            sut = None
+            def effect(x):
+                nonlocal sut
+                sut = x
+            SinglyLinkedList.list(2).forEach(effect)
+            assert_that(sut, equal_to(2))
+    class Test_Nil:
+        def test_forEach_singleton(self):
+            sut = None
+            def effect(x):
+                nonlocal sut
+                sut = x
+            SinglyLinkedList.list().forEach(effect)
+            assert_that(sut, equal_to(None))
 
 class Test_map():
     class Test_Cons:
