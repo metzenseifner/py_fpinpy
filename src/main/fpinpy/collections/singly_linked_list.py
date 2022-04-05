@@ -149,6 +149,14 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         return SinglyLinkedList.list(*tmp)
 
     @staticmethod
+    def flatten(aList):
+        """Flatten a list of lists (monad of monad).
+
+            Series of concatenations. Identity function to each element in list using .
+        """
+        return aList.flatMap(lambda x: x)
+
+    @staticmethod
     def foldRightStatic(aList, identity, function):
         #if aList.isEmpty():
         #    return identity
@@ -260,6 +268,14 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         """Remove n elements from the front of the list.
         """
         raise NotImplementedError
+
+    def flatMap(self, func): # (func: A -> SinglyLinkedList[B]) -> SinglyLinkedList[B]
+        """ Apply function from A -> List[B] to each element.
+            
+            Equivalent implementation (TODO: Not sure how to implement):
+            return SinglyLinkedList.flatten(SinglyLinkedList.map(func))
+        """
+        return self.foldRight(SinglyLinkedList.list(), lambda h: lambda t: SinglyLinkedList.concat(func(h), t))
 
     def filter(self, predicate: Callable[[T], bool]):
         """ Removes elements from the lst that do not satisfy a given predicate.

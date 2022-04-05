@@ -310,3 +310,19 @@ class Test_flattenResult:
         def test_flattenResult(self):
             sut = SinglyLinkedList.flattenResult(SinglyLinkedList.list())
             assert_that(str(sut), equal_to("[NIL]"))
+
+class Test_flatten:
+    def test_flatten_some_with_some(self):
+        sut = SinglyLinkedList.flatten(SinglyLinkedList.list(SinglyLinkedList.list(1,2,3), SinglyLinkedList.list(4,5,6)))
+        assert_that(str(sut), equal_to("[1, 2, 3, 4, 5, 6, NIL]"))
+    def test_flatten_some_with_none(self):
+        sut = SinglyLinkedList.flatten(SinglyLinkedList.list(SinglyLinkedList.list(1,2,3), SinglyLinkedList.list()))
+        assert_that(str(sut), equal_to("[1, 2, 3, NIL]"))
+    def test_flatten_none_with_some(self):
+        sut = SinglyLinkedList.flatten(SinglyLinkedList.list(SinglyLinkedList.list(), SinglyLinkedList.list(4,5,6)))
+        assert_that(str(sut), equal_to("[4, 5, 6, NIL]"))
+
+class Test_flatMap:
+    def test_flatMap(self):
+        sut = SinglyLinkedList.list(1,2,3).flatMap(lambda a: SinglyLinkedList.list(a, -a))
+        assert_that(str(sut), equal_to("[1, -1, 2, -2, 3, -3, NIL]"))
