@@ -2,14 +2,17 @@
 
 from setuptools import setup, find_packages, find_namespace_packages
 import pathlib
+import subprocess
 
 PWD = pathlib.Path(__file__).parent
 
 README = (PWD / "README.md").read_text()
 
+VERSION = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], capture_output=True, text=True).stdout
+
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='fpinpy',
-      version='1.1.7',
+      version=VERSION,
       description='A functional library for Python.',
       long_description=README,
       long_description_content_type='text/markdown',
