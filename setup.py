@@ -8,7 +8,8 @@ PWD = pathlib.Path(__file__).parent
 
 README = (PWD / "README.md").read_text()
 
-VERSION = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], capture_output=True, text=True).stdout
+# Latest annotated git tag
+VERSION = subprocess.run(['git', 'describe', '--abbrev=0'], capture_output=True, text=True).stdout
 
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='fpinpy',
