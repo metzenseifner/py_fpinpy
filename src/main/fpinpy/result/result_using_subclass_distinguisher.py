@@ -169,6 +169,14 @@ class Result(abc.ABC, Generic[T]):
         """
         return Empty()
 
+    @staticmethod
+    def lift2(func): # -> Result[A] -> Result[B] -> Result[C]
+        return lambda result1: lambda result2: result1.map(func).flatMap(lambda x: result2.map(x))
+
+    @staticmethod
+    def map2(result1, result2, func): # (Result, Result, func: Result[A] -> Result[B] -> Result[C]) -> Result[C]
+        return Result.lift2(func)(result1)(result2)
+
     def __new__(cls, *args, **kwargs):
         #if str(caller()) != "of":
         #    raise RuntimeError(f'Base class may not be used directly. Prefer Result.of() for instantiatiation. You used {caller()}')
@@ -269,6 +277,11 @@ class Success(Result[T]):
     def __init__(self, value: T):
         self._value = value
         super().__init__()
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return other.successValue() == self.successValue()
+        return False
 
     @overrides(Result)
     def successValue(self):

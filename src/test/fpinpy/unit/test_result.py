@@ -298,3 +298,19 @@ class Test_mapFailure():
         def test_mapFailure(self):
             sut = Result.empty().mapFailure("new error message")
             assert_that(sut.isEmpty(), equal_to(True))
+
+class Test_lift2():
+    def test_lift2(self):
+        radix = 16
+        string = "AEF15DB"
+        parse_with_radix = lambda radix: lambda string: int(string, radix)
+        sut = Result.lift2(parse_with_radix)(Result.success(radix))(Result.success(string))
+        assert_that(sut, equal_to(Result.success(int(string, radix))))
+
+class Test_map2():
+    def test_map2(self):
+        radix = 16
+        string = "AEF15DB"
+        parse_with_radix = lambda radix: lambda string: int(string, radix)
+        sut = Result.map2(Result.success(radix), Result.success(string), parse_with_radix)
+        assert_that(sut, equal_to(Result.success(int(string, radix))))

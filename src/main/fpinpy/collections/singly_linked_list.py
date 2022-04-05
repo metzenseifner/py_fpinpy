@@ -457,4 +457,4 @@ class Cons(SinglyLinkedList[T]):
             else:
                 accumulator = accumulator + "Cons(" + repr(aList.head()) + ", "
                 return toString(accumulator, aList.tail())
-        return f"{toString(accumulator, self)}"
+        return f"SinglyLinkedList({toString(accumulator, self)})"
