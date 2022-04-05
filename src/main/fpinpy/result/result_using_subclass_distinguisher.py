@@ -491,7 +491,7 @@ class Failure(Empty[T]):
 
     @overrides(Result)
     def forEachOrFail(self, effect: Callable[[T], None]) -> Result[str]:
-        return Result.success(repr(self._exception))
+        return Result.success(self._exception)
 
     @overrides(Result)
     def forEachOrThrow(self, effect: Callable[[T], None]) -> None:

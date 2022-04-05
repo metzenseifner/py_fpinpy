@@ -123,20 +123,20 @@ class TestInstantiation:
     
     def test_failure_factory_on_string_input(self):
         sut = Result.failure("oops").forEachOrFail(lambda x: None)
-        assert_that(sut.successValue(), equal_to("""RuntimeError('oops')"""))
+        assert_that(repr(sut.successValue()), equal_to("""RuntimeError('oops')"""))
 
     def test_failure_factory_on_exception_input(self):
         sut = Result.failure(RuntimeError("oops")).forEachOrFail(lambda x: None)
-        assert_that(sut.successValue(), equal_to("""RuntimeError('oops')"""))
+        assert_that(repr(sut.successValue()), equal_to("""RuntimeError('oops')"""))
 
     @pytest.mark.skip # TODO
     def test_failure_factory_on_string_and_exception_input(self):
         sut = Result.failure("oops", exception=ValueError).forEachOrFail(lambda x: None)
-        assert_that(sut.successValue(), equal_to("""ValueError('oops')"""))
+        assert_that(repr(sut.successValue()), equal_to("""ValueError('oops')"""))
 
     def test_failure_factory_on_Failure_input(self):
         sut = Result.failure(Result.failure("oops")).forEachOrFail(lambda x: None)
-        assert_that(sut.successValue(), equal_to("""RuntimeError('oops')"""))
+        assert_that(repr(sut.successValue()), equal_to("""RuntimeError('oops')"""))
 
     @liskov_subtitution
     def test_that_type_of_Success_is_Result(self):
@@ -273,7 +273,7 @@ class Test_forEachOrFail():
     class Test_Failure():
         def test_forEachOrFail(self, effect):
             sut = Result.failure("oops").forEachOrFail(lambda x: effect(x))
-            assert_that(sut.successValue(), equal_to("""RuntimeError('oops')"""))
+            assert_that(repr(sut.successValue()), equal_to("""RuntimeError('oops')"""))
             assert_that(effect, was_not_applied())
 
     class Test_Empty():
