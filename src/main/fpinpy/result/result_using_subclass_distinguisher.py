@@ -154,6 +154,8 @@ class Result(abc.ABC, Generic[T]):
             > Except where mentioned, they have an “associated value” indicating the detailed cause of the error. This may be a string or a tuple of several items of information (e.g., an error code and a string explaining the code). The associated value is usually passed as arguments to the exception class’s constructor.
         """
         if isinstance(exception, Exception):
+            #exc_type, exc_obj, exc_tb = sys.exc_info()
+            #return Failure(RuntimeError(f"{exception} caught at line {exc_tb.tb_lineno} in file {exc_tb.tb_frame.f_code.co_filename}"))
             return Failure(exception)
         if isinstance(value, Failure):# Failure[T] but isinstance does not support subtypes
             return Failure(value._exception)

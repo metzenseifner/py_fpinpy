@@ -326,3 +326,16 @@ class Test_flatMap:
     def test_flatMap(self):
         sut = SinglyLinkedList.list(1,2,3).flatMap(lambda a: SinglyLinkedList.list(a, -a))
         assert_that(str(sut), equal_to("[1, -1, 2, -2, 3, -3, NIL]"))
+
+class Test_toPyList:
+    class Test_Cons:
+        def test_toPyList_some(self):
+            sut = SinglyLinkedList.list(1,2,3).toPyList()
+            assert_that(sut, equal_to([1,2,3]))
+        def test_toPyList_singleton(self):
+            sut = SinglyLinkedList.list(1).toPyList()
+            assert_that(sut, equal_to([1]))
+    class Test_Nil:
+        def test_toPyList_none(self):
+            sut = SinglyLinkedList.list().toPyList()
+            assert_that(sut, equal_to([]))

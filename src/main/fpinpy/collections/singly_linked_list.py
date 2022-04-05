@@ -269,6 +269,10 @@ class SinglyLinkedList(Generic[T]): # Generic[T] is a subclass of metaclass=ABCM
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def toPyList(self):
+        raise NotImplementedError
+
     def flatMap(self, func): # (func: A -> SinglyLinkedList[B]) -> SinglyLinkedList[B]
         """ Apply function from A -> List[B] to each element.
             
@@ -348,6 +352,9 @@ class Nil(SinglyLinkedList[T]):
     def drop(self, n: int) -> SinglyLinkedList[T]:
         return self
 
+    @overrides(SinglyLinkedList)
+    def toPyList(self):
+        return list()
     #@overrides(SinglyLinkedList)
     #def filter(self, predicate: Callable[[T], bool]):
     #    return self
@@ -452,6 +459,10 @@ class Cons(SinglyLinkedList[T]):
             accumulator = function(next_elem)(accumulator)
             tmp_list = tmp_list.tail()
         return accumulator
+
+    @overrides(SinglyLinkedList)
+    def toPyList(self):
+        return self.foldRight(list(), lambda h: lambda t: [h] + t)
 
     @overrides(SinglyLinkedList)
     def __str__(self) -> str:
