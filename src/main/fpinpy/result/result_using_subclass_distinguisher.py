@@ -222,12 +222,17 @@ class Result(abc.ABC, Generic[T]):
 
     @abc.abstractmethod
     #@non_functional_but_useful
-    def getOrElse(self, default_value) -> U:# default_value: U || Callable[[], U]
+    def getOrElse(self, default_value) -> T:# default_value: T || Callable[[], T]
         """Supports multiple inputs:
 
-            1. u: U
-            2. u: Callable[[], U]
+            1. t: T
+            2. t: Callable[[], T]
         """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    #@non_functional_but_useful
+    def getOrThrow(self) -> T:
         raise NotImplementedError
         
     #@functional
@@ -322,7 +327,11 @@ class Success(Result[T]):
             return Result.failure(e)
 
     @overrides(Result)
-    def getOrElse(self, default_value) -> U:
+    def getOrElse(self, default_value) -> T:
+        return self.successValue()
+
+    @overrides(Result)
+    def getOrThrow(self) -> T:
         return self.successValue()
 
     @overrides(Result)
@@ -399,7 +408,11 @@ class Empty(Result[T]):
     @overrides(Result)
     def getOrElse(self, default_value) -> U:
         return default_value() if callable(default_value) else default_value
-    
+
+    @overrides(Result)
+    def getOrThrow(self):
+        raise RuntimeError(f"getOrThrow called on a {repr(self)}") 
+
     @overrides(Result)
     def forEach(self, effect: Callable[[T], None]) -> None:
         """Do nothing"""
@@ -478,6 +491,10 @@ class Failure(Empty[T]):
     #@overrides(Result)
     #def getOrElse(self, default_value) -> U:
     #    return default_value() if callable(default_value) else default_value
+
+    # already implemented in Empty
+    #@overrides(Result)
+    #def getOrThrow(self, default_value) -> T:
 
     # already implemented in Empty
     #@overrides(Result)

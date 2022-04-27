@@ -314,3 +314,17 @@ class Test_map2():
         parse_with_radix = lambda radix: lambda string: int(string, radix)
         sut = Result.map2(Result.success(radix), Result.success(string), parse_with_radix)
         assert_that(sut, equal_to(Result.success(int(string, radix))))
+
+class Test_getOrThrow():
+    class Test_Success:
+        def test_success(self):
+            sut = Result.of(1)
+            assert_that(sut.getOrThrow(), equal_to(1))
+    class Test_Failure:
+        def test_failure(self):
+            sut = Result.failure("Something bad happened")
+            assert_that(calling(sut.getOrThrow), raises(RuntimeError))
+    class Test_Empty:
+        def test_empty(self):
+            sut = Result.empty()
+            assert_that(calling(sut.getOrThrow), raises(RuntimeError))
