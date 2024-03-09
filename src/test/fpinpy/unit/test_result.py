@@ -227,6 +227,20 @@ class Test_getOrElse():
             sut = Result.empty().getOrElse(2)
             assert_that(sut, equal_to(2))
 
+class Test_orElse():
+    class Test_Success():
+        def test_when_orElse_of_supplier_applied_to_Success_value(self):
+            sut = Result.of(1).orElse(lambda: Result.of(2))
+            assert_that(sut, equal_to(Result.of(1)))
+    class Test_Failure():
+        def test_when_orElse_of_supplier_applied_to_Failure(self):
+            sut = Result.of(None).orElse(lambda: Result.of(2))
+            assert_that(sut, equal_to(Result.of(2)))
+    class Test_Empty():
+        def test_when_orElse_of_supplier_applied_to_Empty_value(self):
+            sut = Result.empty().orElse(lambda: Result.of(2))
+            assert_that(sut, equal_to(Result.of(2)))
+
 class Test_forEach():
     class Test_Success():
         def test_forEach(self, effect):

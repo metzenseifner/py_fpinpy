@@ -27,7 +27,7 @@ test: virtual typecheck
 	#cd src/main && $(PYTHON) -m pytest ../test/ --verbosity=1
 	cd src/main && $(PYTHON) -m pytest --verbosity=5 ../test/ 
 
-typecheck:
+typecheck: virtual
 	cd src/main && $(PYTHON) -m mypy fpinpy
 
 install: virtual build

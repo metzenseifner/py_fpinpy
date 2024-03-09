@@ -116,7 +116,7 @@ class Result(abc.ABC, Generic[T]):
     """
 
     @classmethod
-    def of(cls, value: T, errorMsg: str=None, predicate: Callable[[T], bool]=lambda x: True):
+    def of(cls, value: T, errorMsg: str|None=None, predicate: Callable[[T], bool]=lambda x: True):
         """Main initializer for this class.
 
             Lifts value into monad.
@@ -140,7 +140,7 @@ class Result(abc.ABC, Generic[T]):
         return Success(value)
     
     @staticmethod
-    def failure(value: T, exception: Exception=None):
+    def failure(value: T, exception: Exception|None=None):
         """Initializer for a Result.Failure class.
 
             Supports multiple inputs:
@@ -237,8 +237,8 @@ class Result(abc.ABC, Generic[T]):
         
     #@functional
     #@requires_implementation([getOrElse, map])
-    def orElse(self, default_value: Callable):# default_value: Callable[[], Result[T]] -> Result[U]
-        return self.map(lambda x: self).getOrElse(default_value)
+    def orElse(self, default_value: Callable[[], T]):# default_value: Callable[[], Result[T]] -> Result[U]
+        return self.map(lambda x: Result.of(x)).getOrElse(default_value)
     
     @abc.abstractmethod
     #@non_functional_but_useful
@@ -406,7 +406,7 @@ class Empty(Result[T]):
         return Result.empty()
 
     @overrides(Result)
-    def getOrElse(self, default_value) -> U:
+    def getOrElse(self, default_value:T) -> T:
         return default_value() if callable(default_value) else default_value
 
     @overrides(Result)
