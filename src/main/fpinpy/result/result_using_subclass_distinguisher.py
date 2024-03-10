@@ -23,7 +23,7 @@
 import abc
 from functools import wraps
 from fpinpy.meta.decorators import overrides
-from typing import TypeVar, Generic, Callable, List
+from typing import TypeVar, Generic, Callable, List, Self
 import sys
 # Declare module-scoped type variables for generics
 T = TypeVar('T')
@@ -237,8 +237,15 @@ class Result(abc.ABC, Generic[T]):
         
     #@functional
     #@requires_implementation([getOrElse, map])
-    def orElse(self, default_value: Callable[[], T]):# default_value: Callable[[], Result[T]] -> Result[U]
-        return self.map(lambda x: Result.of(x)).getOrElse(default_value)
+    def orElse(self, default_value: Callable[[], Self]):# default_value: Callable[[], Result[T]] -> Result[U]
+        # Interpreted language requires special handling:
+        # Requires runtime check to ensure return of function is of type Result
+        result = self.map(lambda x: self).getOrElse(default_value)
+        if isinstance(result, Result):
+            return result
+        else:
+            raise RuntimeError("orElse takes a supplier function '() -> Result'. Return type must be a Result")
+        
     
     @abc.abstractmethod
     #@non_functional_but_useful
