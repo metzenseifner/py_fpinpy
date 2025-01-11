@@ -1,3 +1,4 @@
+# ONESHELL ensures one shell per target
 .ONESHELL:
 .PHONY: check clean build virtual test install publish bdist_wheel bdist sdist
 
@@ -6,13 +7,18 @@ PWD=$(shell pwd)
 VENV           = $(PWD)/venv
 SYSTEM_PYTHON  = $(or $(shell which python3), $(shell which python))
 PYTHON         = $(VENV)/bin/python
+activate:=. $(VENV)/bin/activate
 
 WHEEL=$(shell find dist -name '*.whl')
 
-build: clean check test bdist_wheel
+build: check test bdist_wheel
+
+pythonenv: virtual
+	@echo Using PYTHON=${PYTHON}
 
 check: virtual
 	@echo "Verifying package metadata"
+	@$(activate)
 	$(PYTHON) setup.py check -sm
 
 virtual:
@@ -31,9 +37,11 @@ typecheck:
 	cd src/main && $(PYTHON) -m mypy fpinpy
 
 install: virtual build
+	@$(activate)
 	pip install $(WHEEL)
 
 publish: build
+	@$(activate)
 	twine upload --repository pypi $(WHEEL)
 
 clean:
@@ -41,12 +49,15 @@ clean:
 	rm -fr dist/ build/ .out .pytest_cache *.egg-info $(VENV)
 
 bdist_wheel: virtual 
+	@$(activate)
 	$(PYTHON) setup.py bdist_wheel
 
 sdist: virtual
+	@$(activate)
 	$(PYTHON) setup.py sdist
 
 bdist: virtual
+	@$(activate)
 	$(PYTHON) setup.py bdist \
   --formats=rpm \
   --formats=gztar \
