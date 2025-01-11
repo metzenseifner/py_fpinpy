@@ -328,3 +328,9 @@ class Test_getOrThrow():
         def test_empty(self):
             sut = Result.empty()
             assert_that(calling(sut.getOrThrow), raises(RuntimeError))
+
+class Test_orElse():
+  class Test_Success():
+    def test_success(self):
+      sut = Result.of(1).orElse(lambda: 2)
+      assert_that(sut, equal_to(Result.success(1)))

@@ -21,54 +21,69 @@
 # SOFTWARE.
 #
 import abc
-from functools import wraps
-from fpinpy.meta.decorators import overrides
-from typing import TypeVar, Generic, Callable, List
 import sys
+from functools import wraps
+from typing import Callable, Generic, List, TypeVar
+
+from fpinpy.meta.decorators import overrides
+
 # Declare module-scoped type variables for generics
-T = TypeVar('T')
-U = TypeVar('U')
+T = TypeVar("T")
+U = TypeVar("U")
 
 
 def functor_law(orig_f):
     @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
+
     return wrapped
+
 
 def applicative_law(orig_f):
     @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
+
     return wrapped
+
 
 def functional(orig_f):
     @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
+
     return wrapped
 
+
 def non_functional_but_useful(orig_f):
-    """Represents effects
-    """
+    """Represents effects"""
+
     @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
+
     return wrapped
+
 
 def requires_implementation(deps: List[str]):
     def _requires_implementation(orig_f):
         @wraps(orig_f)
         def wrapped(*args, **kwargs):
             return deps
+
         return wrapped
+
     return _requires_implementation
+
 
 def useful_for_testing(orig_f):
     @wraps(orig_f)
     def wrapped(*args, **kwargs):
         return orig_f(*args, **kwargs)
+
     return wrapped
+
 
 """   
     Ideally, the subclasses of the Result monad would be defined 
@@ -86,103 +101,123 @@ def useful_for_testing(orig_f):
         
 """
 
+
 class Result(abc.ABC, Generic[T]):
     """Monad base class.
 
-        This monad supports three modes:
-        1. Success
-        2. Failure
-        3. Empty
+    This monad supports three modes:
+    1. Success
+    2. Failure
+    3. Empty
 
-        Each mode is enforced by use of factory functions.
+    Each mode is enforced by use of factory functions.
 
-        Monadic Laws
-        
-        1. Kleisli Arrows implemented by flatMap.
+    Monadic Laws
 
-        Inherited laws:
+    1. Kleisli Arrows implemented by flatMap.
 
-        Monoid laws (with respect to functions):
+    Inherited laws:
 
-        1. Left identity: ∀ f; (id . f ≡ f) ≡ ((id . f) x ≡ f x) | id=identity and x is any argument
-        2. Right identity (dual law/symmetric law): ∀ f; f . id ≡ f | f is any function 
-        3. Associativity: f . (g . h) ≡ (f . g) . h | f, g, h are any function
+    Monoid laws (with respect to functions):
 
-        Functor laws:
+    1. Left identity: ∀ f; (id . f ≡ f) ≡ ((id . f) x ≡ f x) | id=identity and x is any argument
+    2. Right identity (dual law/symmetric law): ∀ f; f . id ≡ f | f is any function
+    3. Associativity: f . (g . h) ≡ (f . g) . h | f, g, h are any function
 
-        1. Preserves identity: map(id) ≡ id
-        2. Preserves composition: map(f . g) ≡ map(f) . map(g)
-       
+    Functor laws:
+
+    1. Preserves identity: map(id) ≡ id
+    2. Preserves composition: map(f . g) ≡ map(f) . map(g)
+
     """
 
     @classmethod
-    def of(cls, value: T, errorMsg: str=None, predicate: Callable[[T], bool]=lambda x: True):
+    def of(
+        cls,
+        value: T,
+        errorMsg: str = "",
+        predicate: Callable[[T], bool] = lambda x: True,
+    ):
         """Main initializer for this class.
 
-            Lifts value into monad.
+        Lifts value into monad.
 
-            A.k.a. unit
+        A.k.a. unit
         """
-        errorMsg = errorMsg if errorMsg != None else "None value"
         try:
             if predicate(value):
-                return Result.success(value) if value != None \
-                    else Result.failure(errorMsg)
+                return (
+                    Result.success(value)
+                    if value != None
+                    else Result.failure(errorMsg if errorMsg != "" else "None value")
+                )
             else:
-                return Result.failure(f"{errorMsg}")
-        except Exception as e:
-            return Result.failure(f"Exception while evaluating predicate: {errorMsg}", exception=e)
+                return Result.failure(
+                    f"""{errorMsg if errorMsg != "" else "Predicate false on value {value}"}"""
+                )
+        except RuntimeError as e:
+            return Result.failure(
+                f"Exception while evaluating predicate: {errorMsg}", exception=e
+            )
 
     @classmethod
     def success(cls, value: T):
-        """Initializer for a Result.Success class.
-        """
+        """Initializer for a Result.Success class."""
         return Success(value)
-    
+
     @staticmethod
-    def failure(value: T, exception: Exception=None):
+    def failure(value: T, exception: RuntimeError | None = None):
         """Initializer for a Result.Failure class.
 
-            Supports multiple inputs:
-            1. value: str
-            2. value: Exception
-            3. value: str, exception: Exception
-            4. value: Failure[T]
+        Supports multiple inputs:
+        1. value: str
+        2. value: Exception
+        3. value: str, exception: Exception
+        4. value: Failure[T]
 
-            Note the Python documentation regarding exceptions:
+        Note the Python documentation regarding exceptions:
 
-            > Except where mentioned, they have an “associated value” indicating the detailed cause of the error. This may be a string or a tuple of several items of information (e.g., an error code and a string explaining the code). The associated value is usually passed as arguments to the exception class’s constructor.
+        > Except where mentioned, they have an “associated value” indicating the detailed cause of the error. This may be a string or a tuple of several items of information (e.g., an error code and a string explaining the code). The associated value is usually passed as arguments to the exception class’s constructor.
         """
-        if isinstance(exception, Exception):
-            #exc_type, exc_obj, exc_tb = sys.exc_info()
-            #return Failure(RuntimeError(f"{exception} caught at line {exc_tb.tb_lineno} in file {exc_tb.tb_frame.f_code.co_filename}"))
+        if isinstance(exception, RuntimeError):
+            # exc_type, exc_obj, exc_tb = sys.exc_info()
+            # return Failure(RuntimeError(f"{exception} caught at line {exc_tb.tb_lineno} in file {exc_tb.tb_frame.f_code.co_filename}"))
             return Failure(exception)
-        if isinstance(value, Failure):# Failure[T] but isinstance does not support subtypes
+        if isinstance(
+            value, Failure
+        ):  # Failure[T] but isinstance does not support subtypes
             return Failure(value._exception)
         if isinstance(value, str):
             return Failure(RuntimeError(value))
-        if isinstance(value, Exception):
+        if isinstance(value, RuntimeError):
             return Failure(value)
-        return Failure(RuntimeError(f"You tried to construct  Failure({type(value)}), but that type is not supported."))
-    
+        return Failure(
+            RuntimeError(
+                f"You tried to construct  Failure({type(value)}), but that type is not supported."
+            )
+        )
+
     @staticmethod
     def empty():
-        """Initializer for a Result.Empty class.
-        """
+        """Initializer for a Result.Empty class."""
         return Empty()
 
     @staticmethod
-    def lift2(func): # -> Result[A] -> Result[B] -> Result[C]
-        return lambda result1: lambda result2: result1.map(func).flatMap(lambda x: result2.map(x))
+    def lift2(func):  # -> Result[A] -> Result[B] -> Result[C]
+        return lambda result1: lambda result2: result1.map(func).flatMap(
+            lambda x: result2.map(x)
+        )
 
     @staticmethod
-    def map2(result1, result2, func): # (Result, Result, func: Result[A] -> Result[B] -> Result[C]) -> Result[C]
+    def map2(
+        result1, result2, func
+    ):  # (Result, Result, func: Result[A] -> Result[B] -> Result[C]) -> Result[C]
         return Result.lift2(func)(result1)(result2)
 
     def __new__(cls, *args, **kwargs):
-        #if str(caller()) != "of":
+        # if str(caller()) != "of":
         #    raise RuntimeError(f'Base class may not be used directly. Prefer Result.of() for instantiatiation. You used {caller()}')
-        #assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
+        # assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
         #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         instance = object.__new__(cls, args, kwargs)
         return instance
@@ -191,7 +226,7 @@ class Result(abc.ABC, Generic[T]):
         super().__init__()
 
     @abc.abstractmethod
-    def successValue(self) -> RuntimeError:
+    def successValue(self):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -209,62 +244,68 @@ class Result(abc.ABC, Generic[T]):
     @abc.abstractmethod
     def isFailure(self) -> bool:
         raise NotImplementedError
-    
+
     @abc.abstractmethod
-    #@functor_law
-    def map(self, f: Callable[[T], U]):# -> Result[U]:
+    # @functor_law
+    def map(self, f: Callable[[T], U]):  # -> Result[U]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@applicative_law
-    def flatMap(self, f):# f: Callable[[T], Result[U]] -> Result[U]:
+    # @applicative_law
+    def flatMap(self, f):  # f: Callable[[T], Result[U]] -> Result[U]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@non_functional_but_useful
-    def getOrElse(self, default_value) -> T:# default_value: T || Callable[[], T]
+    # @non_functional_but_useful
+    def getOrElse(
+        self, default_value: T | Callable[[], T]
+    ) -> T:  # default_value: T || Callable[[], T]
         """Supports multiple inputs:
 
-            1. t: T
-            2. t: Callable[[], T]
+        1. t: T
+        2. t: Callable[[], T]
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@non_functional_but_useful
+    # @non_functional_but_useful
     def getOrThrow(self) -> T:
         raise NotImplementedError
-        
-    #@functional
-    #@requires_implementation([getOrElse, map])
-    def orElse(self, default_value: Callable):# default_value: Callable[[], Result[T]] -> Result[U]
-        return self.map(lambda x: self).getOrElse(default_value)
-    
+
+    # @functional
+    # @requires_implementation([getOrElse, map])
+    def orElse(
+        self, default_value: Callable
+    ):  # default_value: Callable[[], Result[T]] -> Result[U]
+        return self.map(lambda x: x).getOrElse(default_value)
+
     @abc.abstractmethod
-    #@non_functional_but_useful
+    # @non_functional_but_useful
     def forEach(self, effect: Callable[[T], None]) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@non_functional_but_useful
-    #@useful_for_testing
-    def forEachOrException(self, effect: Callable[[T], None]):# -> Result[RuntimeError]
+    # @non_functional_but_useful
+    # @useful_for_testing
+    def forEachOrException(
+        self, effect: Callable[[T], None]
+    ):  # -> Result[RuntimeError]
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@non_functional_but_useful
-    #@useful_for_testing
-    def forEachOrFail(self, effect: Callable[[T], None]):# -> Result[str]
+    # @non_functional_but_useful
+    # @useful_for_testing
+    def forEachOrFail(self, effect: Callable[[T], None]):  # -> Result[str]
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@non_functional_but_useful
-    def forEachOrThrow(self):# -> Result[Exception]
+    # @non_functional_but_useful
+    def forEachOrThrow(self, effect: Callable[[T], None]) -> None | Exception:
         raise NotImplementedError
 
     @abc.abstractmethod
-    #@functional
-    def mapFailure(self, value: str, exception=RuntimeError):# -> Result[T]
+    # @functional
+    def mapFailure(self, value: str, exception=RuntimeError):  # -> Result[T]
         raise NotImplementedError
 
     def __str__(self):
@@ -273,13 +314,14 @@ class Result(abc.ABC, Generic[T]):
     def __repr__(self):
         raise NotImplementedError
 
+
 class Success(Result[T]):
-    """Represents a Result that is successful.
-    """
+    """Represents a Result that is successful."""
+
     def __new__(cls, *args, **kwargs):
-        #if caller() != "success":
+        # if caller() != "success":
         #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
-        #assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
+        # assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
         #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
 
@@ -293,17 +335,19 @@ class Success(Result[T]):
         return False
 
     @overrides(Result)
-    def successValue(self):
+    def successValue(self) -> T:
         return self._value
-    
+
     @overrides(Result)
     def failureValue(self) -> RuntimeError:
-        raise RuntimeError(f"Method failureValue() called on a {self.__class__} instance.")
+        raise RuntimeError(
+            f"Method failureValue() called on a {self.__class__} instance."
+        )
 
     @overrides(Result)
     def isEmpty(self) -> bool:
         return False
-    
+
     @overrides(Result)
     def isSuccess(self) -> bool:
         return True
@@ -365,30 +409,36 @@ class Success(Result[T]):
     def __repr__(self):
         return f"Result({repr(self._value)})"
 
+
 class Empty(Result[T]):
-    """Represents a Result that is legitimately empty.
-    """
+    """Represents a Result that is legitimately empty."""
+
     def __new__(cls, *args, **kwargs):
-        #if caller() != "empty":
+        # if caller() != "empty":
         #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
-        #assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
+        # assert(kwargs['private_constructor_key'] == cls.__private_constructor_key), \
         #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
+
     def __init__(self):
-        super().__init__() 
+        super().__init__()
 
     @overrides(Result)
     def successValue(self):
-        return RuntimeError(f"Method successValue() called on {self.__class__} instance.")
+        return RuntimeError(
+            f"Method successValue() called on {self.__class__} instance."
+        )
 
     @overrides(Result)
     def failureValue(self) -> RuntimeError:
-        raise RuntimeError(f"Method failureValue() called on a {self.__class__} instance.")
+        raise RuntimeError(
+            f"Method failureValue() called on a {self.__class__} instance."
+        )
 
     @overrides(Result)
     def isEmpty(self) -> bool:
         return True
-    
+
     @overrides(Result)
     def isSuccess(self) -> bool:
         return False
@@ -398,7 +448,9 @@ class Empty(Result[T]):
         return False
 
     @overrides(Result)
-    def map(self, f: Callable[[T], U]):# -> Result[U]: # TODO force Nil to be subclass of Result
+    def map(
+        self, f: Callable[[T], U]
+    ):  # -> Result[U]: # TODO force Nil to be subclass of Result
         return self
 
     @overrides(Result)
@@ -406,12 +458,12 @@ class Empty(Result[T]):
         return Result.empty()
 
     @overrides(Result)
-    def getOrElse(self, default_value) -> U:
+    def getOrElse(self, default_value: T | Callable[[], T]) -> T:
         return default_value() if callable(default_value) else default_value
 
     @overrides(Result)
     def getOrThrow(self):
-        raise RuntimeError(f"getOrThrow called on a {repr(self)}") 
+        raise RuntimeError(f"getOrThrow called on a {repr(self)}")
 
     @overrides(Result)
     def forEach(self, effect: Callable[[T], None]) -> None:
@@ -427,7 +479,7 @@ class Empty(Result[T]):
         return Result.empty()
 
     @overrides(Result)
-    def forEachOrThrow(self, effect: Callable[[T], None]) -> None:
+    def forEachOrThrow(self, effect: Callable[[T], None]) -> None | Exception:
         pass
 
     @overrides(Result)
@@ -442,35 +494,39 @@ class Empty(Result[T]):
     def __repr__(self):
         return f"Empty()"
 
+
 class Failure(Empty[T]):
-    """Represents a Result that is a failure.
-    """
+    """Represents a Result that is a failure."""
+
     def __new__(cls, *args, **kwargs):
-        #if caller() != "failure":
+        # if caller() != "failure":
         #    raise RuntimeError(f"Prefer Result.of() for instantiatiation.  You used {caller()}.")
-        #assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
+        # assert(kwargs['private_constructor_key'] == Result.__private_constructor_key), \
         #  f'The {cls} class may not be constructed directly. Prefer Result.of() for instantiatiation.'
         return object.__new__(cls)
-    def __init__(self, exception: Exception):
+
+    def __init__(self, exception: RuntimeError):
         self._exception = exception
         tmp = sys.exc_info()
         self.exception_type = tmp[0]
         self.exception_object = tmp[1]
         self.exception_traceback = tmp[2]
         super().__init__()
-    
+
     @overrides(Result)
     def successValue(self) -> RuntimeError:
-        return RuntimeError(f"Method successValue() called on {self.__class__} instance.")
-    
+        return RuntimeError(
+            f"Method successValue() called on {self.__class__} instance."
+        )
+
     @overrides(Result)
-    def failureValue(self) -> Exception:
+    def failureValue(self) -> RuntimeError:
         return self._exception
 
     @overrides(Result)
     def isEmpty(self) -> bool:
         return False
-    
+
     @overrides(Result)
     def isSuccess(self) -> bool:
         return False
@@ -480,25 +536,27 @@ class Failure(Empty[T]):
         return True
 
     @overrides(Result)
-    def map(self, f: Callable[[T], U]):# -> Result[U]: TODO: force make Failure subclass of Result
+    def map(
+        self, f: Callable[[T], U]
+    ):  # -> Result[U]: TODO: force make Failure subclass of Result
         return self
 
     @overrides(Result)
-    def flatMap(self, f: Callable[[T], Result[U]]):# -> Result[U]:
+    def flatMap(self, f: Callable[[T], Result[U]]):  # -> Result[U]:
         return self
 
     # already implemented in Empty
-    #@overrides(Result)
-    #def getOrElse(self, default_value) -> U:
+    # @overrides(Result)
+    # def getOrElse(self, default_value) -> U:
     #    return default_value() if callable(default_value) else default_value
 
     # already implemented in Empty
-    #@overrides(Result)
-    #def getOrThrow(self, default_value) -> T:
+    # @overrides(Result)
+    # def getOrThrow(self, default_value) -> T:
 
     # already implemented in Empty
-    #@overrides(Result)
-    #def forEach(self, effect: Callable[[T], None]) -> None:
+    # @overrides(Result)
+    # def forEach(self, effect: Callable[[T], None]) -> None:
     #    """Do nothing"""
     #    return None
 
@@ -511,7 +569,7 @@ class Failure(Empty[T]):
         return Result.success(self._exception)
 
     @overrides(Result)
-    def forEachOrThrow(self, effect: Callable[[T], None]) -> None:
+    def forEachOrThrow(self, effect: Callable[[T], None]) -> Exception:
         raise self._exception
 
     @overrides(Result)
@@ -520,8 +578,8 @@ class Failure(Empty[T]):
 
     @overrides(Result)
     def __str__(self):
-        return f"Failure({self._exception})"
+        return f"Failure({self._exception}, {self.exception_traceback})"
 
     @overrides(Result)
     def __repr__(self):
-        return f"Failure({repr(self._exception)})"
+        return f"Failure({repr(self._exception)}, {self.exception_traceback})"
